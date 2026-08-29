@@ -1,12 +1,84 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { GoogleDriveVideo } from "@/components/GoogleDriveVideo";
+import { PortableTextRenderer } from "@/components/PortableTextRenderer";
+import { formatDate, getImageUrl, getPostBySlug } from "@/lib/sanity";
 
-export const metadata: Metadata = {
-  title: "The quiet power of a well-made morning",
-  description: "Before the day asks anything of us, there is a small window where attention is still our own.",
-};
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getPostBySlug(slug);
 
-export default async function StoryPage() {
-  const title = "The quiet power of a well-made morning";
-  return <main className="story-page"><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "Article", headline: title, datePublished: "2026-08-18", author: { "@type": "Person", name: "Ada Morrow" }, publisher: { "@type": "Organization", name: "Field Notes" } }) }} /><Link className="back-link" href="/">← Field Notes</Link><p className="eyebrow">Field note · Aug 18, 2026 · 6 min read</p><h1>The quiet power<br /><em>of a well-made morning</em></h1><p className="article-lead">Before the day asks anything of us, there is a small window where attention is still our own.</p><div className="article-art"><div className="sun" /><div className="ridge ridge-back" /><div className="ridge ridge-front" /></div><article><p>There is a particular kind of quiet that belongs only to the first hour. It is not silence exactly, but the absence of being needed. The day has not yet arranged itself around requests.</p><p>We often treat mornings as a runway, a place to accelerate from sleep into usefulness. But a morning can be something else: a small room we build for ourselves, with the windows open.</p><h2>Begin with what is already here</h2><p>The ritual need not be elaborate. A cup made slowly. A walk without a destination. Five pages of a book before the small blue rectangle gets its say. The point is not optimization. It is recognition.</p><p>Attention is a finite, tender thing. Give some of it back to yourself before the world starts spending it.</p></article><Link className="button button-dark" href="/">Back to the journal <span>↗</span></Link></main>;
+  return {
+    title: post?.title || "Story",
+    description: post?.excerpt || "A story from Field Notes.",
+  };
+}
+
+export default async function StoryPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = await getPostBySlug(slug);
+
+  if (!post) {
+    notFound();
+  }
+
+  const coverImage = getImageUrl(post.coverImage, 1200, 800);
+  const articleDate = formatDate(post.publishedAt);
+
+  return (
+    <main className="story-page">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Article",
+            headline: post.title,
+            datePublished: post.publishedAt,
+            author: { "@type": "Person", name: post.author?.name || "Ada Morrow" },
+            publisher: { "@type": "Organization", name: "Field Notes" },
+            description: post.excerpt || "A story from Field Notes.",
+          }),
+        }}
+      />
+
+      <Link className="back-link" href="/">
+        ← Field Notes
+      </Link>
+
+      <p className="eyebrow">
+        {post.category || "Field note"} · {articleDate} · {post.readTime || 6} min read
+      </p>
+
+      <h1>{post.title}</h1>
+      <p className="article-lead">{post.excerpt}</p>
+
+      <div className={`article-art ${coverImage ? "has-image" : "placeholder"}`}>
+        {coverImage ? (
+          <img src={coverImage} alt={post.title} className="hero-image" />
+        ) : (
+          <>
+            <div className="sun" />
+            <div className="ridge ridge-back" />
+            <div className="ridge ridge-front" />
+          </>
+        )}
+      </div>
+
+      {post.videoUrl ? (
+        <div className="article-media">
+          <GoogleDriveVideo videoUrl={post.videoUrl} title={post.title} />
+        </div>
+      ) : null}
+
+      <article>
+        <PortableTextRenderer value={post.body as any} />
+      </article>
+
+      <Link className="button button-dark" href="/">
+        Back to the journal <span>↗</span>
+      </Link>
+    </main>
+  );
 }
