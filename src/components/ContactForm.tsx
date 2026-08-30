@@ -110,7 +110,7 @@ export function ContactForm() {
       </div>
 
       <label>
-        <span>Message</span>
+        <span>Feedback/Message</span>
         <textarea
           value={form.message}
           rows={5}

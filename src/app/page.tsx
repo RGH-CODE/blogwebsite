@@ -25,6 +25,9 @@ export default async function Home() {
       <main>
         <section className="intro-band">
           <div>
+            <h2>This blog page is under maintance and testing phase!!</h2>
+            <p>The below blogs might not be real!!</p>
+            <p>we can explore site and leave feedback below</p>
             <p className="eyebrow">An independent journal for curious minds</p>
             <h1>
               Make room<br />
